@@ -1,3 +1,15 @@
 {
-  "editor.formatOnType": true
+  "editor.formatOnType": true,
+  "files.associations": {
+    "*.wpy": "vue",
+    "*.cjson": "jsonc",
+    "*.wxss": "css",
+    "*.wxs": "javascript",
+    "*.html": "html",
+    "strings.h": "c",
+    "string.h": "c",
+    "stddef.h": "c",
+    "wchar.h": "c",
+    "assertmacros.h": "c"
+  }
 }
