@@ -2,8 +2,7 @@
 
 double circularArea(double r);
 
-int main()
-{
+int main(){
   double radius = 1.0, area = 0.0;
   printf(" Area of Circles\n\n");
   printf(" Radius Area\n");
@@ -17,8 +16,7 @@ int main()
   return 0;
 }
 
-double circularArea(double r)
-{
+double circularArea(double r){
   const double pi = 3.1415926;
   return pi * r * r;
 }
