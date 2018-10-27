@@ -10,6 +10,8 @@
     "string.h": "c",
     "stddef.h": "c",
     "wchar.h": "c",
-    "assertmacros.h": "c"
+    "assertmacros.h": "c",
+    "assert.h": "c",
+    "cdefs.h": "c"
   }
 }
