@@ -71,8 +71,36 @@ static void test_anonymous_union_struct(){
   assert(sizeof(dw) == 4);
 }  
 
+struct CompactDate{
+  unsigned int short_year:8; // short_year + 1900 就是公元年了
+  unsigned int month:4;
+  unsigned int day: 5;
+  unsigned int hour: 5;
+  unsigned int minute: 6;
+  unsigned int second: 6;
+  unsigned int millis: 20; // 毫秒
+};
+typedef struct CompactDate CompactDate;
+const int REF_YEAR = 1900;
+
+static const char * dateAsString(CompactDate date){
+  static char strDate[30];
+  const int year = date.short_year + REF_YEAR;
+  sprintf(strDate,"%02d-%02d-%02d %02d:%02d:%02d.%d",year, date.month, date.day, date.hour,date.minute,date.second, date.millis);
+  return strDate;
+}
+
+static void test_bit_fields(){
+  const CompactDate birthdate = {88,3,2,5,55,5};
+  printf("sizeof CompactDate %lu:\n", sizeof(CompactDate));
+  const char *dateStr = dateAsString(birthdate);
+  printf("birthdate:%s\n",dateStr);
+  assert_str_eq("1988-03-02 05:55:05.0", dateStr);
+}
+
 int main(int argc, char const *argv[]) {
   test_structs();
   test_anonymous_union_struct();
+  test_bit_fields();
   return 0;
 }

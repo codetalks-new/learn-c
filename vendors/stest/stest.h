@@ -23,12 +23,12 @@ extern "C" {
 #define STEST_API
 #endif
 
-STEST_API bool assert_str_eq(const char *str1,const char *str2){
-  if(str1 == NULL || str2 == NULL){
+STEST_API bool assert_str_eq(const char *expected,const char *actual){
+  if(expected == NULL || expected == NULL){
     assert(false);
     return false;
   }
-  const int result = strcmp(str1, str2);
+  const int result = strcmp(expected, actual);
   assert(result == 0);
   return result == 0;
 }
