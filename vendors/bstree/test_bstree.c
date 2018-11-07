@@ -21,9 +21,14 @@ int main(int argc, char const *argv[]) {
   assert(bst->root != NULL);
   assert(*(bst->root->data) == rootValue);
   const int l1 = 4;
-  bool r2 = bst_insert(bst, &l1, sizeof(int));
+  bool r2 = bst_insert(bst, &l1, sizeof(l1));
   assert(r2 == true);
   assert(bst->root->left != NULL);
   assert(*(bst->root->left->data) == l1);
+  const int l2 = 6;
+  bool r3 = bst_insert(bst, &l2, sizeof(l2));
+  assert(r3 == true);
+  assert(bst->root->left->right != NULL);
+  assert(*(bst->root->left->right->data) == l2);
   return 0;
 }
