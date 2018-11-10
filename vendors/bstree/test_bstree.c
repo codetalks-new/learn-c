@@ -9,6 +9,15 @@ static int int_cmp(int *lhs, int *rhs) {
   return lhsValue - rhsValue;
 }
 
+/**
+ *       10
+ *    /      \
+ *   4      15
+ *   \      / |
+ *    7    14 18
+ *         /
+ *        11
+ */
 int main(int argc, char const *argv[]) {
   BSTree *bst = new_bst((CmpFn *)int_cmp, NULL);
   assert(bst != NULL);
@@ -25,10 +34,14 @@ int main(int argc, char const *argv[]) {
   assert(r2 == true);
   assert(bst->root->left != NULL);
   assert(*(bst->root->left->data) == l1);
-  const int l2 = 6;
+  const int l2 = 7;
   bool r3 = bst_insert(bst, &l2, sizeof(l2));
   assert(r3 == true);
   assert(bst->root->left->right != NULL);
   assert(*(bst->root->left->right->data) == l2);
+  bst_erase(bst, &l1);
+  // detach_min(&bst->root->left); // 节点4是最小值将会被删除
+  assert(bst->root->left);
+  assert(*(bst->root->left->data) == 7);
   return 0;
 }

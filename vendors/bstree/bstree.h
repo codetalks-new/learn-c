@@ -24,6 +24,10 @@ extern "C" {
 #define BSTREE_API
 #endif
 
+#ifndef BSTREE_PRIVATE
+#define BSTREE_PRIVATE
+#endif
+
 typedef char byte;
 // 定义 BST 节点
 typedef struct Node {
@@ -54,6 +58,11 @@ typedef struct {
 BSTREE_API BSTree *new_bst(CmpFn *cmp, KeyFn *key);
 
 BSTREE_API bool bst_insert(BSTree *bst, const void *data, size_t size);
+BSTREE_API void bst_clear(BSTree *bst);
+BSTREE_PRIVATE Node *detach_min(Node **pparent);
+
+BSTREE_API bool bst_erase(BSTree *bst, const void *key);
+BSTREE_API int bst_inorder(BSTree *bst, bool (*action)(void *data));
 
 #ifdef __cplusplus
 }
