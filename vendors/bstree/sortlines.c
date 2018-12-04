@@ -23,7 +23,7 @@ int main(int argc, char const *argv[]) {
     exit(EXIT_FAILURE);
   }
   int n = bst_inorder(tree, printStr);
-  fprintf(stderr, "\nsortlines: Printed %d lines.\n");
+  fprintf(stderr, "\nsortlines: Printed %d lines.\n", n);
   bst_clear(tree);
   return 0;
 }
