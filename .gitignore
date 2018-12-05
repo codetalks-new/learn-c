@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# normal assembly file
+*.s
+*.sbak
+
 # Object files
 *.o
 *.ko
