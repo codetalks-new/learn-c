@@ -1,5 +1,5 @@
 BasedOnStyle: Google
 Language: Cpp
 ColumnLimit: 80
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Empty
