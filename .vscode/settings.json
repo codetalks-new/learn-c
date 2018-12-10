@@ -13,5 +13,7 @@
     "assertmacros.h": "c",
     "assert.h": "c",
     "cdefs.h": "c"
-  }
+  },
+  "terminal.integrated.fontSize": 15,
+  "window.zoomLevel": 1
 }
