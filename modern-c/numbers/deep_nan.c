@@ -24,7 +24,7 @@ int main() {
   printf("%f %" PRIx64 "\n", f1, f1b);
   uint64_t f2b;
   memcpy(&f2b, &f2, sizeof f2);
-  printf("%f %" PRIx64 "\n", f2, f2b);
+  printf("%f 0x%llx\n", f2, f2b);
   return 0;
 }
 // nan 7ff8000000000000
