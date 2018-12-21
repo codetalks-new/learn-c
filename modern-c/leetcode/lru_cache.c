@@ -1,6 +1,8 @@
 /**
  *
- 运用你所掌握的数据结构，设计和实现一个  LRU (最近最少使用)
+ LeetCode 146. LRU缓存机制 C 语言实现 by 代码会说话
+
+运用你所掌握的数据结构，设计和实现一个  LRU (最近最少使用)
 缓存机制。它应该支持以下操作： 获取数据 get 和 写入数据 put 。
 
 获取数据 get(key) - 如果密钥 (key)
@@ -19,12 +21,15 @@ LRUCache cache = new LRUCache( 2);
 cache.put(1, 1);
 cache.put(2, 2);
 cache.get(1);     // 返回  1
-cache.put(3, 3);  // 该操作会使得密钥 2 作废
+cache.put(3,3);  // 该操作会使得密钥 2 作废
 cache.get(2);     // 返回 -1 (未找到)
 cache.put(4, 4);  // 该操作会使得密钥 1 作废
 cache.get(1);     // 返回 -1 (未找到)
 cache.get(3);     // 返回  3
 cache.get(4);     // 返回  4
+
+
+**后来居上，用之则贵, 末位淘汰**
 *
 */
 
@@ -38,21 +43,47 @@ typedef struct Entry {
 } Entry;
 
 typedef struct LRUCache {
-  Entry* head;
   int capacity;
   int size;
+  Entry* head;
 } LRUCache;
+
+// Entry, HashMap Node
+Entry* makeEntry(int key, int value) {
+  Entry* entry = malloc(sizeof(Entry));
+  entry->key = key;
+  entry->value = value;
+  entry->next = NULL;
+  return entry;
+}
 
 LRUCache* lRUCacheCreate(int capacity) {
   LRUCache* cache = malloc(sizeof(LRUCache));
   cache->size = 0;
   cache->capacity = capacity;
-  Entry* head = malloc(sizeof(Entry));
-  cache->head = head;
-  head->next = NULL;
-  head->value = -1;
-  head->key = -1;
+  cache->head = makeEntry(-1, -1);
+  assert(capacity > 1);
   return cache;
+}
+
+void moveToFront(LRUCache* obj, Entry* entry) {
+  // 后来居上
+  Entry* prevNode = obj->head->next;
+  obj->head->next = entry;
+  entry->next = prevNode;
+  // head -> 1,2,
+}
+void removeLastEntry(LRUCache* obj) {
+  // 末位淘汰
+  // 1,2,3
+  Entry* prevNode = obj->head;
+  Entry* node = prevNode->next;
+  while (node && node->next) {
+    prevNode = node;
+    node = node->next;
+  }
+  prevNode->next = NULL;
+  free(node);
 }
 
 int lRUCacheGet(LRUCache* obj, int key) {
@@ -61,10 +92,11 @@ int lRUCacheGet(LRUCache* obj, int key) {
   while (node != NULL) {
     if (node->key == key) {
       const int value = node->value;
-      // 将选中的节点移到链表的开始
+      // 用之则贵
+      // 1,2,3,4
       prevNode->next = node->next;
-      node->next = obj->head->next;
-      obj->head->next = node;
+      moveToFront(obj, node);
+
       return value;
     }
     prevNode = node;
@@ -73,28 +105,10 @@ int lRUCacheGet(LRUCache* obj, int key) {
   return -1;
 }
 
-void removeLastEntry(LRUCache* obj) {
-  Entry* prevNode = obj->head;
-  Entry* node = obj->head->next;
-  while (node != NULL && node->next != NULL) {
-    prevNode = node;
-    node = node->next;
-  }
-  if (prevNode->next != NULL) {
-    free(prevNode->next);
-  }
-  prevNode->next = NULL;
-}
-
 void lRUCachePut(LRUCache* obj, int key, int value) {
-  Entry* entry = malloc(sizeof(Entry));
-  entry->value = value;
-  entry->key = key;
-  entry->next = NULL;
-  // 插件到开头
-  Entry* firstNode = obj->head->next;
-  entry->next = firstNode;
-  obj->head->next = entry;
+  Entry* entry = makeEntry(key, value);
+  // 后来居上
+  moveToFront(obj, entry);
   obj->size += 1;
   if (obj->size > obj->capacity) {
     obj->size = obj->capacity;
@@ -102,18 +116,14 @@ void lRUCachePut(LRUCache* obj, int key, int value) {
   }
 }
 
-void freeEntries(Entry* head) {
-  Entry* node = head;
-  while (node != NULL) {
+void lRUCacheFree(LRUCache* obj) {
+  Entry* node = obj->head;
+  while (node) {
     Entry* tmp = node->next;
     free(node);
     node = tmp;
   }
-}
-
-void lRUCacheFree(LRUCache* obj) {
   free(obj);
-  freeEntries(obj->head);
 }
 
 /**
