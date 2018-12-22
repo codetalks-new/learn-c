@@ -43,6 +43,87 @@ typedef struct AllOne {
 
 #define EQ(a, b) (strcmp((a), (b)) == 0)
 
+typedef enum Direction { NEXT, PREV } Direction;
+
+void deleteKeyValue(AllOne* obj, KeyValue* kv) {
+  const bool is_first = kv->prev == NULL;
+  const bool is_last = kv->next == NULL;
+  if (is_first && is_last) {
+    obj->head->next = NULL;
+    obj->last = NULL;
+  } else if (is_last) {
+    KeyValue* prev = kv->prev;
+    obj->last = prev;
+    prev->next = NULL;
+  } else if (is_first) {
+    KeyValue* next = kv->next;
+    next->prev = NULL;
+    obj->head->next = next;
+  }
+  free(kv);
+}
+
+/**
+ * 向前或向后遍历查找要移到到的目标位置
+ * 方向是向前时：
+ * 返回点的值大于或者等于目标值，为了统一向返回点的右边插件，所以返回点有可能是要插入点本身。此时可以不插入。
+ *  如果返回 NULL，说明要移到动尾部
+ * 方向上向后时： 返回点的值是大于或者等于目标值，如果返回 NULL,
+ * 说明要移动到头部
+ *
+ */
+KeyValue* findDestPrev(KeyValue* cur, Direction dir) {
+  KeyValue* p = dir == NEXT ? cur->next : cur->prev;
+  while (p) {
+    if (dir == NEXT) {
+      if (p->value > cur->value) {
+        if (p->next == NULL) {
+          return p;
+        }
+        p = p->next;
+      } else {
+        return p->prev;
+      }
+    } else {
+      if (p->value < cur->value) {
+        p = p->prev;
+      } else {
+        return p;
+      }
+    }
+  }
+  return NULL;
+}
+
+void moveTo(AllOne* obj, KeyValue* cur, Direction dir) {
+  // 向右移到
+  KeyValue* destPrev = findDestPrev(cur, dir);
+  // 1) 旧关系的断裂
+  KeyValue* old_prev = cur->prev;
+  KeyValue* old_next = cur->next;
+  assert(old_prev || old_next);
+  if (old_prev && old_next) {
+    old_prev->next = old_next;
+    old_next->prev = old_prev;
+  } else if (old_prev == NULL) {
+    // cur 原来是头节点，现在向右移动
+    obj->head->next = destPrev;
+    destPrev->prev = NULL;
+  } else if (old_next == NULL) {
+    // cur 原来是尾节点，现在向左移动
+    old_prev->next = NULL;
+    obj->last = old_prev;
+  }
+
+  // 2) 新关系的建立
+  cur->next = destPrev->next;
+  if (cur->next == NULL) {
+    obj->last = cur;
+  }
+  destPrev->next = cur;
+  cur->prev = destPrev;
+}
+
 /** Initialize your data structure here. */
 AllOne* allOneCreate() {
   AllOne* obj = malloc(sizeof(AllOne));
@@ -74,30 +155,8 @@ void allOneInc(AllOne* obj, char* key) {
     }
     if (found) {
       // 如果有匹配，看能否前移
-      KeyValue* old_prev = cur->prev;
-      KeyValue* old_next = cur->next;
-      KeyValue* p = cur->prev;
-      bool moved = false;
-      while (p) {
-        if (p->value < cur->value) {
-          p = p->prev;
-          moved = true;
-        } else {
-          break;
-        }
-      }
-      if (p && moved) {
-        if (cur == obj->last) {
-          obj->last = old_prev;
-        }
-        old_prev->next = old_next;
-        if (old_next) {
-          old_next->prev = old_prev;
-        }
-        cur->next = p->next;
-        p->next->prev = cur;
-        p->next = cur;
-        cur->prev = p;
+      if (cur->prev != NULL) {
+        moveTo(obj, cur, PREV);
       }
     } else {
       // 如果没有匹配的节点，说明是新的节点
@@ -117,49 +176,10 @@ void allOneDec(AllOne* obj, char* key) {
     if (EQ(cur->key, key)) {
       cur->value -= 1;
       if (cur->value == 0) {
-        KeyValue* prev = cur->prev;
-        if (cur->next == NULL) {  // 最后一个节点
-          if (prev == NULL) {
-            // 第一个节点
-            obj->head->next = NULL;
-            obj->last = NULL;
-          } else {
-            obj->last = prev;
-            prev->next = NULL;
-          }
-        } else {
-          // 由于有序,所以不应该是第一个节点
-          assert(prev);
-          prev->next = cur->next;
-          cur->next->prev = prev;
-        }
-        free(cur);
+        deleteKeyValue(obj, cur);
       } else {
-        // 向右移到
-        KeyValue* p = cur->next;
-        bool moved = false;
-        while (p) {
-          if (p->value > cur->value) {
-            p = p->next;
-            moved = true;
-          } else {
-            break;
-          }
-        }
-        if (p && moved) {
-          KeyValue* prev = cur->prev;
-          KeyValue* next = cur->next;
-          if (prev == NULL) {
-            // 说明是第一个节点
-            KeyValue* new_first = cur->next;
-            obj->head->next = new_first;
-            new_first->prev = NULL;
-          } else {
-            prev->next = next;
-            next->prev = prev;
-          }
-          cur->next = p;
-          p->prev = cur;
+        if (cur->next != NULL) {
+          moveTo(obj, cur, NEXT);
         }
       }
       break;
@@ -180,7 +200,15 @@ char* allOneGetMinKey(AllOne* obj) {
   return obj->last->key;
 }
 
-void allOneFree(AllOne* obj) {}
+void allOneFree(AllOne* obj) {
+  KeyValue* kv = obj->head;
+  while (kv) {
+    KeyValue* tmp = kv;
+    kv = kv->next;
+    free(tmp);
+  }
+  free(obj);
+}
 
 /**
  * Your AllOne struct will be instantiated and called as such:
@@ -192,6 +220,7 @@ void allOneFree(AllOne* obj) {}
  * allOneFree(obj);
  */
 int main() {
+  // 示例测试
   AllOne* obj = allOneCreate();
   allOneInc(obj, "san");
   assert(EQ(allOneGetMaxKey(obj), "san"));
@@ -203,5 +232,12 @@ int main() {
   allOneDec(obj, "yan");
   assert(EQ(allOneGetMaxKey(obj), "san"));
   assert(EQ(allOneGetMinKey(obj), "san"));
+  allOneFree(obj);
+  // 测试只有一个
+  AllOne* obj2 = allOneCreate();
+  allOneInc(obj2, "san");
+  allOneDec(obj2, "san");
+  allOneFree(obj2);
+
   return 0;
 }
