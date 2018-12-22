@@ -59,6 +59,11 @@ void deleteKeyValue(AllOne* obj, KeyValue* kv) {
     KeyValue* next = kv->next;
     next->prev = NULL;
     obj->head->next = next;
+  } else {
+    KeyValue* prev = kv->prev;
+    KeyValue* next = kv->next;
+    prev->next = next;
+    next->prev = prev;
   }
   free(kv);
 }
@@ -98,6 +103,9 @@ KeyValue* findDestPrev(KeyValue* cur, Direction dir) {
 void moveTo(AllOne* obj, KeyValue* cur, Direction dir) {
   // 向右移到
   KeyValue* destPrev = findDestPrev(cur, dir);
+  if (destPrev == cur) {
+    return;
+  }
   // 1) 旧关系的断裂
   KeyValue* old_prev = cur->prev;
   KeyValue* old_next = cur->next;
@@ -114,14 +122,21 @@ void moveTo(AllOne* obj, KeyValue* cur, Direction dir) {
     old_prev->next = NULL;
     obj->last = old_prev;
   }
-
   // 2) 新关系的建立
+  if (destPrev == NULL) {
+    destPrev = obj->head;
+  }
   cur->next = destPrev->next;
   if (cur->next == NULL) {
     obj->last = cur;
   }
+  if (destPrev->next) {
+    destPrev->next->prev = cur;
+  }
   destPrev->next = cur;
   cur->prev = destPrev;
+  obj->head->next->prev = NULL;
+  int wait = 0;
 }
 
 /** Initialize your data structure here. */
@@ -190,14 +205,13 @@ void allOneDec(AllOne* obj, char* key) {
 
 /** Returns one of the keys with maximal value. */
 char* allOneGetMaxKey(AllOne* obj) {
-  assert(obj->head->next);
-  return obj->head->next->key;
+  const KeyValue* max = obj->head->next;
+  return max ? max->key : "";
 }
 
 /** Returns one of the keys with Minimal value. */
 char* allOneGetMinKey(AllOne* obj) {
-  assert(obj->last);
-  return obj->last->key;
+  return obj->last ? obj->last->key : "";
 }
 
 void allOneFree(AllOne* obj) {
@@ -220,6 +234,50 @@ void allOneFree(AllOne* obj) {
  * allOneFree(obj);
  */
 int main() {
+  // Runtime Error 2
+  AllOne* a3 = allOneCreate();
+  allOneInc(a3, "a");
+  allOneInc(a3, "b");
+  allOneInc(a3, "c");
+  allOneInc(a3, "d");
+  allOneInc(a3, "a");
+  allOneInc(a3, "b");
+  allOneInc(a3, "c");
+  allOneInc(a3, "d");
+  allOneInc(a3, "c");
+  allOneInc(a3, "d");
+  allOneInc(a3, "d");
+  allOneInc(a3, "a");
+  assert(EQ(allOneGetMinKey(a3), "b"));
+  // Runtime Error 1
+  AllOne* a2 = allOneCreate();
+  allOneInc(a2, "a");
+  allOneInc(a2, "b");
+  allOneInc(a2, "b");
+  allOneInc(a2, "c");
+  allOneInc(a2, "c");
+  allOneInc(a2, "c");
+  allOneDec(a2, "b");
+  allOneDec(a2, "b");
+  assert(EQ(allOneGetMinKey(a2), "a"));
+  allOneDec(a2, "a");
+  assert(EQ(allOneGetMaxKey(a2), "c"));
+  assert(EQ(allOneGetMinKey(a2), "c"));
+  // 超时测试1
+  AllOne* a1 = allOneCreate();
+  allOneInc(a1, "hello");
+  allOneInc(a1, "goodbye");
+  allOneInc(a1, "hello");
+  allOneInc(a1, "hello");
+  assert(EQ(allOneGetMaxKey(a1), "hello"));
+  allOneInc(a1, "leet");
+  allOneInc(a1, "code");
+  allOneInc(a1, "leet");
+  allOneDec(a1, "hello");
+  allOneInc(a1, "leet");
+  allOneInc(a1, "code");
+  allOneInc(a1, "code");
+  assert(EQ(allOneGetMaxKey(a1), "leet"));
   // 示例测试
   AllOne* obj = allOneCreate();
   allOneInc(obj, "san");
@@ -237,6 +295,8 @@ int main() {
   AllOne* obj2 = allOneCreate();
   allOneInc(obj2, "san");
   allOneDec(obj2, "san");
+  assert(EQ(allOneGetMinKey(obj2), ""));
+  assert(EQ(allOneGetMaxKey(obj2), ""));
   allOneFree(obj2);
 
   return 0;
