@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 // Linux C语言 系统编程实践 (2) 环境变量
 // - by 代码会说话

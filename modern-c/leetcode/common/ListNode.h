@@ -9,17 +9,17 @@ struct ListNode {
 
 typedef struct ListNode ListNode;
 
+typedef struct IntArray {
+  int* data;
+  int size;
+} IntArray;
+
 ListNode* makeNode(int val) {
   ListNode* node = malloc(sizeof(ListNode));
   node->val = val;
   node->next = NULL;
   return node;
 }
-
-typedef struct IntArray {
-  int* data;
-  int size;
-} IntArray;
 
 ListNode* arrayToList(IntArray iarr) {
   const int size = iarr.size;
