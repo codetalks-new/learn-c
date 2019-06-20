@@ -18,7 +18,8 @@
     "cdefs.h": "c",
     "stdlib.h": "c",
     "stdio.h": "c",
-    "unistd.h": "c"
+    "unistd.h": "c",
+    "time.h": "c"
   },
   "terminal.integrated.fontSize": 15,
   "window.zoomLevel": 0
