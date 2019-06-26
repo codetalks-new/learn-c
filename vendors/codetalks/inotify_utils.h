@@ -200,6 +200,12 @@ char *in_event_to_name(InotifyMask event) {
   }
 }
 
+#define APPEND_STR(to, format, ...)             \
+  do {                                          \
+    sprintf(&to[str_pos], format, __VA_ARGS__); \
+    str_pos += strlen(&to[str_pos]);            \
+  } while (0);
+
 char *in_mask_to_event_names(uint32_t mask) {
   int event_cnt = sizeof(inotify_event_masks) / sizeof(InotifyMask);
   static char event_names[256] = {'\0'};
@@ -208,12 +214,33 @@ char *in_mask_to_event_names(uint32_t mask) {
     InotifyMask event = inotify_event_masks[i];
     if ((event & mask) == event) {
       char *name = in_event_to_name(event);
-      sprintf(&event_names[str_pos], "%s(0x%x),", name, event);
-      str_pos += strlen(&event_names[str_pos]);
+      APPEND_STR(event_names, "%s(0x%x),", name, event);
+      // sprintf(&event_names[str_pos], "%s(0x%x),", name, event);
+      // str_pos += strlen(&event_names[str_pos]);
     }
   }
   if (str_pos > 0) {
     event_names[str_pos - 1] = '\0';
   }
   return event_names;
+}
+
+char *in_inotify_event_to_str(struct inotify_event *ev) {
+  static char str[512] = {'\0'};
+  int str_pos = 0;
+  APPEND_STR(str, "struct inotify_event{ .wd= %2d,", ev->wd);
+  if (ev->cookie > 0) {
+    APPEND_STR(str, ".cookie = %4d,", ev->cookie);
+  }
+  APPEND_STR(str, ".mask = (0x%x)(%s),", ev->mask,
+             in_mask_to_event_names(ev->mask));
+  if (ev->len > 0) {
+    APPEND_STR(str, ".name = %s", ev->name);
+  }
+  APPEND_STR(str, "%s}\n", " ");
+  return str;
+}
+
+void in_dump_notify_event(struct inotify_event *ev) {
+  printf("%s", in_inotify_event_to_str(ev));
 }
