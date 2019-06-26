@@ -22,7 +22,8 @@
     "time.h": "c",
     "utsname.h": "c",
     "limits.h": "c",
-    "syslimits.h": "c"
+    "syslimits.h": "c",
+    "inotify.h": "c"
   },
   "terminal.integrated.fontSize": 15,
   "window.zoomLevel": 0
