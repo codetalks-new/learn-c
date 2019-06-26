@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 
 char *current_time_v1() {
   const time_t now = time(NULL);
@@ -68,7 +69,7 @@ int main(int argc, char const *argv[]) {
   printf("time_t t = %ld\n", t);
   dump_timeval(&tv);
 
-  // setlocale(LC_ALL, "");  // 让环境变量的 LC_等值生效.
+  setlocale(LC_ALL, "");  // 让环境变量的 LC_等值生效.
   printf("固定格式的日期函数,ctime 及 asctime:\n");
   printf("当前时间(ctime):             %s\n", current_time_v1());
   printf("当前时间(gmtime+asctime):    %s\n", current_time_v2());
@@ -76,21 +77,23 @@ int main(int argc, char const *argv[]) {
   printf("自定义格式,本地化\n");
   printf("当前时间(localtime+%%F %%T):      %s\n", current_time_v4("%F %T"));
   printf("当前时间(gmtime+%%F %%T):         %s\n", current_time_v5("%F %T"));
+  printf("当前时间(localtime+%%x %%X):      %s\n", current_time_v4("%x %X"));
+  printf("当前时间(gmtime+%%x %%X):         %s\n", current_time_v5("%x %X"));
   const time_t now = time(NULL);
-  const struct tm *lt = localtime(&now);
-  const time_t now_ret = mktime(lt);
-  printf("localtime now_ret:%d\n", now_ret);
-  struct tm gmt;
-  gmtime_r(&now, &gmt);
+  struct tm *lt = localtime(&now);
+  // const time_t now_ret = mktime(lt);
+  // printf("localtime now_ret:%ld\n", now_ret);
+  // struct tm gmt;
+  // gmtime_r(&now, &gmt);
   printf("localtime:\n");
   dump_tm(lt);
-  printf("gmtime:\n");
-  dump_tm(&gmt);
-  sleep(3);
-  time_t seconds_later = time(NULL);
+  // printf("gmtime:\n");
+  // dump_tm(&gmt);
+  // sleep(3);
+  // time_t seconds_later = time(NULL);
 
-  gmtime(&seconds_later);
-  dump_tm(&gmt);
+  // gmtime(&seconds_later);
+  // dump_tm(&gmt);
 
   return 0;
 }

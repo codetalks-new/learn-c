@@ -20,7 +20,9 @@
     "stdio.h": "c",
     "unistd.h": "c",
     "time.h": "c",
-    "utsname.h": "c"
+    "utsname.h": "c",
+    "limits.h": "c",
+    "syslimits.h": "c"
   },
   "terminal.integrated.fontSize": 15,
   "window.zoomLevel": 0

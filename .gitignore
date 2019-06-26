@@ -59,3 +59,4 @@ dkms.conf
 .vscode/ipch
 *.tmp
 bin/
+local_media/
