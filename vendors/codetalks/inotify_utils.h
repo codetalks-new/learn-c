@@ -214,9 +214,9 @@ char *in_mask_to_event_names(uint32_t mask) {
   int str_pos = 0;
   for (int i = 0; i < event_cnt; i++) {
     InotifyMask event = inotify_event_masks[i];
-    if ((event & mask) == event) {
+    if (event & mask) {
       char *name = in_event_to_name(event);
-      APPEND_STR(event_names, "%s(0x%x),", name, event);
+      APPEND_STR(event_names, "%s,", name);
       // sprintf(&event_names[str_pos], "%s(0x%x),", name, event);
       // str_pos += strlen(&event_names[str_pos]);
     }
@@ -234,7 +234,8 @@ char *in_inotify_event_to_str(struct inotify_event *ev) {
   if (ev->cookie > 0) {
     APPEND_STR(str, ".cookie=%4d,", ev->cookie);
   }
-  APPEND_STR(str, ".mask=(0x%x)(%s),", ev->mask,
+  APPEND_STR(str, ".mask=(%s)(%s),",
+             (ev->mask & InotifyMaskIsdir) ? "Dir" : "File",
              in_mask_to_event_names(ev->mask));
   if (ev->len > 0) {
     APPEND_STR(str, ".name=%s", ev->name);
