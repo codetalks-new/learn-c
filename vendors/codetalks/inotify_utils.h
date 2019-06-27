@@ -1,9 +1,11 @@
+#pragma once
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/inotify.h>
+#include "ct_datetime.h"
 /**
  * - 元数据: 如权限,所有权,链接计数,扩展属性,用户ID,组ID等
  * - DELETE 与 DELETE_SELF: 删除受监控对象(目录或文件),触发 DELETE_SELF
@@ -228,19 +230,19 @@ char *in_mask_to_event_names(uint32_t mask) {
 char *in_inotify_event_to_str(struct inotify_event *ev) {
   static char str[512] = {'\0'};
   int str_pos = 0;
-  APPEND_STR(str, "struct inotify_event{ .wd= %2d,", ev->wd);
+  APPEND_STR(str, "inotify_event{ .wd=%2d,", ev->wd);
   if (ev->cookie > 0) {
-    APPEND_STR(str, ".cookie = %4d,", ev->cookie);
+    APPEND_STR(str, ".cookie=%4d,", ev->cookie);
   }
-  APPEND_STR(str, ".mask = (0x%x)(%s),", ev->mask,
+  APPEND_STR(str, ".mask=(0x%x)(%s),", ev->mask,
              in_mask_to_event_names(ev->mask));
   if (ev->len > 0) {
-    APPEND_STR(str, ".name = %s", ev->name);
+    APPEND_STR(str, ".name=%s", ev->name);
   }
   APPEND_STR(str, "%s}\n", " ");
   return str;
 }
 
-void in_dump_notify_event(struct inotify_event *ev) {
-  printf("%s", in_inotify_event_to_str(ev));
+void in_log_notify_event(struct inotify_event *ev) {
+  printf("[%s] %s", ct_current_time("%X"), in_inotify_event_to_str(ev));
 }

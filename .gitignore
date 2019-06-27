@@ -60,3 +60,4 @@ dkms.conf
 *.tmp
 bin/
 local_media/
+logs/

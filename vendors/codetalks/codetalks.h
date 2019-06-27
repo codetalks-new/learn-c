@@ -8,4 +8,5 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "ct_datetime.h"
 #include "ct_errors.h"

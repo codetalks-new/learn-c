@@ -34,7 +34,7 @@ int main(int argc, char const *argv[]) {
     // Process all of the events in buffer returned by read()
     for (char *p = buf; p < buf + read_cnt;) {
       struct inotify_event *event = (struct inotify_event *)p;
-      in_dump_notify_event(event);
+      in_log_notify_event(event);
       p += sizeof(struct inotify_event) + event->len;
     }
   }
