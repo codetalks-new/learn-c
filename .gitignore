@@ -2,7 +2,7 @@
 *.d
 
 # normal assembly file
-*.s
+*.S
 *.sbak
 
 # Object files
