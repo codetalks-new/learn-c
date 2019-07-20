@@ -32,6 +32,11 @@
 | SAR k,D | D ⟵ D>><sub>A</sub>k | 算术右移(shift arithmetic right)    |
 | SHR k,D | D ⟵ D>><sub>L</sub>k | 逻辑右移(shift logic right)         |
 
+注意:
+
+1. 移位量也可以放在单字节寄存器`%cl`中.
+2. 移位操作对于 N 位长的数据值进行操作时,移位量是由低 m 位决定的.其中 2\*\*m = N ,后面的高位会被忽略.
+
 ## 加载有效地址 LEA
 
 lea(load effective address) 指令实际上是 mov 指令的变形,它的指示形式是从内存读取数据到寄存器,但是实际上它根本就没有引用内存.

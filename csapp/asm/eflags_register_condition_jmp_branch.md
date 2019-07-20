@@ -99,3 +99,119 @@ eflags 包含了一组状态标志,一个控制标志,及一组系统标志.
 | setae D | setnb  | D ⟵ ~CF          | 超过或相等(无符号>=) |
 | setb D  | setnae | D ⟵ CF           | 低于(无符号<)        |
 | setbe D | setna  | D ⟵ CF\|ZF       | 低于或等于(无符号<=) |
+
+## 跳转指令
+
+正常情况下,指令从上到下一条接一条执行.跳转(jump)指令会导致执行切换到一个全新的位置.
+在汇编代码中,这些跳转通常用一个标号(label) 指明.
+
+1. 直接跳转 `jmp <Label>`
+2. 间接跳转,跳转地址从寄存器或者内存位置中读取的.
+
+间接跳转的两种写法:
+
+1. `jmp *%rax` 用寄存器 `%rax` 的值作为跳转地址.
+2. `jmp *(%rax)` 以 `%rax` 作为读地址,从内存中读出跳转地址.
+
+| 指令          | 同义名 | 跳转条件     | 描述                 |
+| ------------- | ------ | ------------ | -------------------- |
+| jmp Label     |        | 1            | 直接跳转             |
+| jmp \*Operand |        | 1            | 间接跳转             |
+| je Label      | jz     | ZF           | 相等/零              |
+| jne Label     | jnz    | ~ZF          | 不相等/非零          |
+| js Label      |        | SF           | 负数                 |
+| jns Label     |        | ~SF          | 非负数               |
+| jl Label      | jnge   | SF^OF        | 小于(有符号<)        |
+| jle Label     | jng    | (SF^OF)\|ZF  | 小于或等于(有符号<=) |
+| jg Label      | jnle   | ~(SF^OF)&~ZF | 大于(有符号>)        |
+| jge Label     | jnl    | ~(SF^OF)     | 大于或等于(有符号>=) |
+| ja Label      | jnbe   | ~CF&~ZF      | 超过(无符号>)        |
+| jae Label     | jnb    | ~CF          | 超过或相等(无符号>=) |
+| jb Label      | jnae   | CF           | 低于(无符号<)        |
+| jbe Label     | jna    | CF\|ZF       | 低于或等于(无符号<=) |
+
+## 跳转指令的编码
+
+1. 在汇编中,跳转目标用符号书写.
+2. 经过汇编器及后面的链接器处理之后,会产生跳转目标的适当编码.
+
+跳转指令的编码方式
+
+1. PC 相对编码-最常用
+   PC 相对编码的方式是将目标地址指令的地址与紧跟在跳转指令后面的那条指令的地址之间的差作为编码. 这些地址你偏移量可以编码为 1,2 或 4 字节.
+2. 绝对地址编码
+   用 4 个字节直接指定目标
+
+## 用条件传送指令来实现条件分支
+
+实现条件操作的传统方法是通过使用控制的条件转移.
+另一各策略是使用数据的条件转移.
+
+以下示例是简单的表示条件控制的转移 C 代码.
+
+```c
+long absdiff(long x, long y){
+  long result;
+  if(x < y ){
+    result = y - x;
+  }else{
+    result = x - y;
+  }
+  return result;
+}
+```
+
+另一个示例是使用条件传送风格的写法.
+
+```c
+long cmovdiff(long x,long y){
+  long rval = y - x;
+  long eval = x - y;
+  long ntest = x >= y;
+  if(ntest)rval = eval; // 此行可使用一条指令来实现
+  return rval;
+}
+```
+
+有意思的是 `absdiff` 风格 C 语言的代码通过优化编译出来的汇编的风格,跟 `cmovdiff` 的风格却是对应的.
+
+```
+▶ cc -o absdiff.o -O1 -c csapp/asm/absdiff.c
+
+~/Workspace/learn-c  master ✗                                                0h20m ⚑ ◒
+▶ objdump -d absdiff.o
+
+absdiff.o:      file format Mach-O 64-bit x86-64
+
+Disassembly of section __TEXT,__text:
+_absdiff:
+       0:       55      pushq   %rbp
+       1:       48 89 e5        movq    %rsp, %rbp
+       4:       48 89 f0        movq    %rsi, %rax
+       7:       48 29 f8        subq    %rdi, %rax
+       a:       48 29 f7        subq    %rsi, %rdi
+       d:       48 0f 4c f8     cmovlq  %rax, %rdi
+      11:       48 89 f8        movq    %rdi, %rax
+      14:       5d      popq    %rbp
+      15:       c3      retq
+
+```
+
+条件传送指令,当条件满足时指令把源值 S 复制到目的 R.
+
+| 指令       | 同义名  | 跳转条件     | 描述                 |
+| ---------- | ------- | ------------ | -------------------- |
+| cmove S,R  | cmovz   | ZF           | 相等/零              |
+| cmovne S,R | cmovnz  | ~ZF          | 不相等/非零          |
+| cmovs S,R  |         | SF           | 负数                 |
+| cmovns S,R |         | ~SF          | 非负数               |
+| cmovl S,R  | cmovnge | SF^OF        | 小于(有符号<)        |
+| cmovle S,R | cmovng  | (SF^OF)\|ZF  | 小于或等于(有符号<=) |
+| cmovg S,R  | cmovnle | ~(SF^OF)&~ZF | 大于(有符号>)        |
+| cmovge S,R | cmovnl  | ~(SF^OF)     | 大于或等于(有符号>=) |
+| cmova S,R  | cmovnbe | ~CF&~ZF      | 超过(无符号>)        |
+| cmovae S,R | cmovnb  | ~CF          | 超过或相等(无符号>=) |
+| cmovb S,R  | cmovnae | CF           | 低于(无符号<)        |
+| cmovbe S,R | cmovna  | CF\|ZF       | 低于或等于(无符号<=) |
+
+一般来说,只有在两个分支条件计算都比较简单时,才会使用条件传送指令来优化.否则分支预测错误也会导致较大的开销.
