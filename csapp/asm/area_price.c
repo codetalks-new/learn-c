@@ -7,10 +7,10 @@ long calc_area_price(long width, long height, long unit_price) {
   long price = area * unit_price;
   return price;
 }
-long main() {
+int main() {
   long width = 3;
   long height = 4;
   long unit_price = 5;
   long price = calc_area_price(width, height, 5);
-  return price;
+  return (int)price;
 }
