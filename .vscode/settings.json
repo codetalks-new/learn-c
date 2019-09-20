@@ -25,8 +25,9 @@
     "syslimits.h": "c",
     "inotify.h": "c",
     "stdint.h": "c",
-    "cstdint": "c"
+    "cstdint": "c",
+    "float.h": "c"
   },
   "terminal.integrated.fontSize": 15,
-  "window.zoomLevel": 0
+  "window.zoomLevel": 1
 }
