@@ -43,6 +43,67 @@ typedef struct TestDetal {
   double duration;
 } TestDetail;
 
+// 终端输出的颜色表,红色代表失败,绿色代表成功
+typedef struct Colors {
+  const char* red;
+  const char* red_bold;
+  const char* green;
+  const char* green_bold;
+  const char* yellow;
+  const char* yellow_bold;
+  const char* reset;
+  const char* bold;
+} Colors;
+// bright colors: black ,red,gree,yello,blue,magenta,cyan,white
+// 基本语法说明:
+// ESC[ 参数字节(0到多个) 中间字节(0到多个) m
+// 参数一般是是用分号分隔数字 0;31,缺少的数字当作 0处理.
+static Colors colors = {
+    .red = "\033[31m",
+    .red_bold = "\033[31;1m",
+    .green = "\033[32m",
+    .green_bold = "\033[32;1m",
+    .yellow = "\033[33m",
+    .yellow_bold = "\033[33;1m",
+    .reset = "\033[0m",
+    .bold = "\033[1m",  // 增粗
+};
+
+static int _color_print(const char* color, const char* fmt, ...) {
+  va_list args;
+  char buffer[256];
+  va_start(args, fmt);
+  vsnprintf(buffer, sizeof(buffer), fmt, args);
+  va_end(args);
+
+  printf("%s", color);
+  int n = printf("%s", buffer);
+  printf("%s", colors.reset);
+  return n;
+}
+
+// 显示格式化当前执行时间文本增加适当颜色转义
+static char* _format_ms(double ms) {
+  const int buf_len = 64;
+  char* buf = malloc(buf_len);
+  const char* color;
+  if (ms < 80) {
+    color = colors.green_bold;
+  } else if (ms < 160) {
+    color = colors.green;
+  } else if (ms < 200) {
+    color = colors.yellow_bold;
+  } else if (ms < 300) {
+    color = colors.yellow;
+  } else if (ms < 400) {
+    color = colors.red_bold;
+  } else {
+    color = colors.red;
+  }
+  snprintf(buf, buf_len, "%s %.4lf ms(毫秒)%s", color, ms, colors.reset);
+  return buf;
+}
+
 // 程序运行时间统计的计时类型,用于统计进程耗时
 static clockid_t clockid = CLOCK_PROCESS_CPUTIME_ID;
 typedef struct TestTimer {
@@ -73,41 +134,8 @@ static void _timer_stop() {
   clock_gettime(clockid, &_timer.end);
 }
 
-// 显示当前计时器耗时
-static void _timer_print_ms() {
-  printf("%.6lf ms(毫秒)", _timer_calc_ms());
-}
-
-// 终端输出的颜色表,红色代表失败,绿色代表成功
-typedef struct Colors {
-  const char* green;
-  const char* red;
-  const char* green_dark;
-  const char* red_dark;
-  const char* normal;
-  const char* normal_dark;
-} Colors;
-
-static Colors colors = {
-    .green = "\033[0;32m",
-    .green_dark = "\033[1;32m",
-    .red = "\033[0;31m",
-    .red_dark = "\033[1;31m",
-    .normal = "\033[0m",
-    .normal_dark = "\033[1m",
-};
-
-static int _color_print(const char* color, const char* fmt, ...) {
-  va_list args;
-  char buffer[256];
-  va_start(args, fmt);
-  vsnprintf(buffer, sizeof(buffer), fmt, args);
-  va_end(args);
-
-  printf("%s", color);
-  int n = printf("%s", buffer);
-  printf("%s", colors.normal);
-  return n;
+static char* _current_ms_str() {
+  return _format_ms(_timer_calc_ms());
 }
 
 // 测试信息输出级别
@@ -164,7 +192,7 @@ static void _test_begin_line(const Test* t) {
   }
   const char* format =
       level == VerboseLevelVerbose ? "Test %s:\n" : "Test %s... ";
-  int n = _color_print(colors.normal_dark, format, t->name);
+  int n = _color_print(colors.bold, format, t->name);
   if (n < MIN_WIDTH && level < VerboseLevelVerbose) {
     char spaces[MIN_WIDTH];
     memset(spaces, ' ', MIN_WIDTH);
@@ -176,13 +204,12 @@ static void _test_begin_line(const Test* t) {
 
 static void _test_end_line(bool success) {
   const char* status_text = success ? "OK" : "FAILED";
-  const char* color = success ? colors.green_dark : colors.red_dark;
+  const char* color = success ? colors.green_bold : colors.red_bold;
   printf("[ ");
   _color_print(color, status_text);
   printf(" ]");
   if (success) {
-    printf("  ");
-    _timer_print_ms();
+    printf("  %s", _current_ms_str());
   }
   printf("\n");
 }
@@ -194,13 +221,13 @@ static void _test_error(const char* fmt, ...) {
   }
   if (level <= VerboseLevelDefault && !_current_unit_log_cnt && _current_test) {
     printf("[ ");
-    _color_print(colors.red_dark, "FAILED");
+    _color_print(colors.red_bold, "FAILED");
     printf(" ]\n");
   }
   if (level >= VerboseLevelDefault) {
     _test_line_indent(1);
     if (level >= VerboseLevelVerbose) {
-      _color_print(colors.red_dark, "ERROR:");
+      _color_print(colors.red_bold, "ERROR:");
     }
     va_list args;
     va_start(args, fmt);
@@ -229,7 +256,7 @@ int _test_check_(bool cond, const char* file, int line, const char* fmt, ...) {
     const bool has_case = !!_current_case_name[0];
     if (has_case && !_current_case_log_cnt) {
       _test_line_indent(1);
-      _color_print(colors.normal_dark, "Case %s:\n", _current_case_name);
+      _color_print(colors.bold, "Case %s:\n", _current_case_name);
       _current_case_log_cnt++;
       _current_unit_log_cnt++;
     }
@@ -275,7 +302,7 @@ void _test_case_(const char* fmt, ...) {
   va_end(args);
   if (_opts.verbose_level >= VerboseLevelVerbose) {
     _test_line_indent(1);
-    _color_print(colors.normal_dark, "Case %s:\n", _current_case_name);
+    _color_print(colors.bold, "Case %s:\n", _current_case_name);
     _current_case_log_cnt++;
     _current_unit_log_cnt++;
   }
@@ -310,19 +337,16 @@ static bool _test_do_run(const Test* test, int index) {
   _timer_stop();
   if (_current_unit_fail_cnt == 0) {
     if (_opts.verbose_level == VerboseLevelVerbose) {
-      _color_print(colors.green_dark, "SUCCESS:");
-      printf("所有断言都已经通过!");
-      _test_line_indent(1);
-      printf("执行用时:");
-      _timer_print_ms();
-      printf("\n");
+      _color_print(colors.green_bold, "SUCCESS:");
+      printf("所有断言都已经通过! 执行用时:%s\n", _current_ms_str());
     } else if (_opts.verbose_level > VerboseLevelSilent) {
       _test_end_line(0);
     }
   } else {
     if (_opts.verbose_level == VerboseLevelVerbose) {
-      _color_print(colors.red_dark, "FAILED:");
-      printf("%d 个断言失败.\n", _current_unit_fail_cnt);
+      _color_print(colors.red_bold, "FAILED:");
+      printf("%d 个断言失败.执行用时: %s\n", _current_unit_fail_cnt,
+             _current_ms_str());
     }
   }
   _test_post_do_run(test, index);
@@ -384,7 +408,14 @@ extern void run_tests(const Test tests[], const TestOptions* opts) {
     _opts.verbose_level = opts->verbose_level;
   }
   // 2) 重新包装 Test 对象
+  int failed_cnt = 0;
   for (int i = 0; tests[i].fun; i++) {
-    _test_run(&tests[i], i);
+    bool ok = _test_run(&tests[i], i);
+    ok || (failed_cnt++);
+  }
+  if (failed_cnt) {
+    _color_print(colors.red_bold, "测试不通过, %d个测试用例失败\n", failed_cnt);
+  } else {
+    _color_print(colors.green_bold, "测试通过!");
   }
 }
