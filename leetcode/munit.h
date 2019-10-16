@@ -89,10 +89,10 @@ typedef struct Colors {
 } Colors;
 
 static Colors colors = {
-    .green = "\033[0:32m",
-    .green_dark = "\033[1:32m",
-    .red = "\033[0:31m",
-    .red_dark = "\033[1:31m",
+    .green = "\033[0;32m",
+    .green_dark = "\033[1;32m",
+    .red = "\033[0;31m",
+    .red_dark = "\033[1;31m",
     .normal = "\033[0m",
     .normal_dark = "\033[1m",
 };
@@ -235,11 +235,9 @@ int _test_check_(bool cond, const char* file, int line, const char* fmt, ...) {
     }
     _test_line_indent(has_case ? 2 : 1);
     if (file) {
-      if (level < VerboseLevelVerbose) {
-        const char* lastsep = strrchr(file, '/');
-        if (lastsep) {
-          file = lastsep + 1;
-        }
+      const char* lastsep = strrchr(file, '/');
+      if (lastsep) {
+        file = lastsep + 1;
       }
       printf("%s:%d: Check ", file, line);
     }
@@ -366,6 +364,7 @@ static bool _test_exec_in_child_process(const Test* test, int index) {
   }
 }
 
+// 执行测试用例
 static bool _test_run(const Test* test, int index) {
   bool success = true;
   if (_opts.no_exec) {
